@@ -157,6 +157,7 @@ class Imaginator {
         canvas.add(refrefText)
 
         this.refrefText = refrefText
+        this.priceText = priceText
 
     }
 
@@ -231,7 +232,8 @@ class Imaginator {
     }
 
     clear(){
-        this.refrefText.set('text', "hola esta es una catualizazion para ver como queda cuando el texto es muy largo")
+        this.refrefText.set('text', "Esta es una prueba para cuendo el texto es muy largo y tiene que cambiar hola esta es otra prueba de concepto")
+        this.refrefText.set('top', this.priceText.lineCoords.tl.y - this.refrefText.height - 25)
         this.canvas.renderAll()
         console.log("se actualizo el texto")
     }
