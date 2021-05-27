@@ -209,6 +209,7 @@ class Imaginator {
         const canvas = this.canvas
         const json = canvas.toJSON()
         console.log(json)
+        console.log("")
         return json
     }
 
@@ -232,11 +233,13 @@ class Imaginator {
     }
 
     clear(){
-        this.refrefText.set('text', "Esta es una prueba para cuendo el texto es muy largo y tiene que cambiar hola esta es otra prueba de concepto")
+        this.refrefText.set('id', "123456789")
         this.refrefText.set('top', this.priceText.lineCoords.tl.y - this.refrefText.height - 25)
         this.canvas.renderAll()
         console.log("se actualizo el texto")
+     
     }
+
 
 
 }
@@ -261,5 +264,6 @@ fileInput.addEventListener('change', e => {
 })
 
 btn.addEventListener('click', () =>{
-    imaginator.clear()
+    //imaginator.clear()
+    imaginator.toJSON()
 })
