@@ -1,0 +1,15 @@
+.ratio {
+    position: relative;
+    width: 100%;
+    padding-bottom: 75.4%;
+    background: grey; /** <-- For the demo **/
+}
+
+.ratio > div{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0
+}
+
