@@ -47,11 +47,15 @@ class Imaginator {
         this.BACKGROUND = '#292926'
 
 
-        this.priceText = null
+        this.productName = ''
+        this.ref = ''
+        this.price = ''
+
+        this.objects = {}
 
     }
 
-    init(values) {
+    async init(values) {
         const canvas = this.canvas
         const INFO_WIDTH = values.infoWidth || this.INFO_WIDTH
         const BACKGROUND = values.background || this.BACKGROUND
@@ -61,9 +65,13 @@ class Imaginator {
             productName,
             price,
             ref,
+            whatsapp
         } = values
 
-
+        this.productName = productName
+        this.price = price
+        this.ref = ref
+        this.whatsapp = whatsapp 
 
         const infoBackground = new fabric.Rect({
             left: 0,
@@ -76,61 +84,38 @@ class Imaginator {
         canvas.add(infoBackground);
 
 
-
-        fabric.loadSVGFromURL('./SVG/divider.svg', (objects, options) => {
-            const obj = fabric.util.groupSVGElements(objects, options);
-            obj.set('top', -20)
-            obj.set('scaleY', 2.5)
-            obj.set('scaleX', 1)
-            obj.set('left', INFO_WIDTH)
-            obj.set('selectable', false)
-            canvas.add(obj)
+        await this.loadSVG('./SVG/divider.svg',{
+            top: -20,
+            scaleY: 2.5,
+            scaleX: 1,
+            left: INFO_WIDTH,
+            selectable: false
         })
 
-
-        // Logo de la empresa
-        fabric.loadSVGFromURL('./SVG/logo-w.svg', (objects, options) => {
-            const obj = fabric.util.groupSVGElements(objects, options);
-            obj.set('lockMovementX', true)
+       
+        await this.loadSVG('./SVG/logo-w.svg',{
+            lockMovementX: true,
+            left: PADDING,
+            top: PADDING * 2,
+            selectable: true
+        }, obj => {
             const logoWidth = obj.width
             const containerWidth = infoBackground.width
-
             const scaleValue = (containerWidth - (PADDING * 2)) / logoWidth
             obj.scale(scaleValue)
-            obj.set('left', PADDING)
-            obj.set('top', PADDING * 2)
-            obj.set('selectable', true)
-            canvas.add(obj)
         })
 
-
-
-        // Info de WhatsApp
-        fabric.loadSVGFromURL('./SVG/whatsapp.svg', (objects, options) => {
-            const obj = fabric.util.groupSVGElements(objects, options);
-            obj.set('lockMovementX', true)
-            obj.scale(.06)
-            obj.set('left', PADDING)
-            obj.set('top', canvas.getHeight() - obj.getScaledHeight() - (PADDING * 2))
-            obj.set('selectable', false)
-            canvas.add(obj)
-
-            const whatsappNumber = new fabric.Textbox('+57 318 2657709', {
-                left: PADDING,
-                width: infoBackground.width - (PADDING * 3 + obj.getScaledWidth()),
-                fontSize: 25,
-                fontFamily: 'Roboto',
-                fill: '#fff',
-                fontWeight: 200,
-                lockMovementX: false,
-                selectable: false
-            });
-            whatsappNumber.setPositionByOrigin({ x: (PADDING * 2 + obj.getScaledWidth()), y: obj.getCenterPoint().y }, 'left', 'center')
-            canvas.add(whatsappNumber)
+       
+        const whatsappLogoObject = await this.loadSVG('./SVG/whatsapp.svg',{
+            lockMovementX: true,
+            left: PADDING,
+            selectable: false
+        }, obj => {
+            obj.scale(0.06)
+            obj.set('top', canvas.getHeight() - obj.getScaledHeight() - (PADDING * 2)) 
         })
-
-
-        // Información de la prenda
+        
+        // Textos para hacer referencias y poderlos editat mas adelante
         const priceText = new fabric.Textbox(price, {
             left: PADDING,
             top: canvas.getHeight() - 300,
@@ -141,6 +126,7 @@ class Imaginator {
             fontWeight: 400,
             lockMovementX: true
         });
+        priceText.set('id', 'price')
         canvas.add(priceText)
 
 
@@ -154,12 +140,35 @@ class Imaginator {
             lockMovementX: true
         });
         refrefText.set('top', priceText.lineCoords.tl.y - refrefText.height - 25)
+        refrefText.set('id', 'productNameRef')
         canvas.add(refrefText)
 
-        this.refrefText = refrefText
-        this.priceText = priceText
 
+        const whatsappNumber = new fabric.Textbox(whatsapp , {
+            left: PADDING,
+            width: infoBackground.width - (PADDING * 3 + whatsappLogoObject.getScaledWidth()),
+            fontSize: 25,
+            fontFamily: 'Roboto',
+            fill: '#fff',
+            fontWeight: 200,
+            lockMovementX: false,
+            selectable: false
+        });
+        whatsappNumber.set('id', 'whatsapp')
+        whatsappNumber.setPositionByOrigin({ x: (PADDING * 2 + whatsappLogoObject.getScaledWidth()), y: whatsappLogoObject.getCenterPoint().y }, 'left', 'center')
+        canvas.add(whatsappNumber)
+
+        this.objects = {
+            priceObject: priceText,
+            productNameRefObject: refrefText,
+            whatsappObject: whatsappNumber
+        }
+
+        this.addVarianHook()
+
+        return
     }
+
 
     async addImage(file) {
         const image = await this.removeBg(file)
@@ -176,6 +185,22 @@ class Imaginator {
         })
     }
 
+
+    loadSVG(url, props, callback){
+        return new Promise(resolve =>{
+            fabric.loadSVGFromURL(url, (objects, options) => {
+                const obj = fabric.util.groupSVGElements(objects, options);
+                Object.keys(props).forEach(prop => {
+                    obj.set(prop, props[prop])
+                })
+                callback && callback(obj)
+                this.canvas.add(obj)
+                resolve(obj)
+            })
+        })
+    }
+
+
     removeBg(fileImage) {
         return new Promise((resolve, reject) => {
             const image = new MarvinImage()
@@ -190,6 +215,7 @@ class Imaginator {
         })
     }
 
+
     whiteToAlpha(image) {
         for (var y = 0; y < image.getHeight(); y++) {
 
@@ -198,26 +224,40 @@ class Imaginator {
                 var g = image.getIntComponent1(x, y);
                 var b = image.getIntComponent2(x, y);
 
-                if (r >= 245 && g >= 245 && b >= 245) {
+                if (r >= 242 && g >= 242 && b >= 242) {
                     image.setIntColor(x, y, 0);
                 }
             }
         }
     }
 
+
     toJSON() {
         const canvas = this.canvas
-        const json = canvas.toJSON()
+        const json = canvas.toObject(['selectable', 'lockMovementX', 'lockMovementY', 'id'])
         console.log(json)
-        console.log("")
         return json
     }
 
-    loadFromJSON(json){
-        this.canvas.clear()
-        this.canvas.loadFromJSON(json, this.canvas.renderAll.bind(this.canvas));
-        console.log("cargo la da")
+
+    loadFromJSON(json, callback){
+        return new Promise(resolve => {
+            this.canvas.clear()
+            this.canvas.loadFromJSON(json, ()=>{
+                this.canvas.forEachObject(obj => {
+                    const id = obj.get('id')
+                    if(!id) return
+                    this.objects[id + 'Object'] = obj
+                })
+                callback && callback()
+                this.canvas.renderAll.bind(this.canvas)
+                console.log("JSON loaded!")
+                resolve()
+            });
+        })
+       
     }
+
 
     toDataURL(format="jpeg", quality=1) {
         const result = this.canvas.toDataURL({
@@ -226,21 +266,70 @@ class Imaginator {
             multiplier: 2
         })
 
-        const img = new Image()
-        img.src = result
-        document.body.appendChild(img)
+        //const img = new Image()
+        //img.src = result
+        //document.body.appendChild(img)
         return result
     }
 
-    clear(){
-        this.refrefText.set('id', "123456789")
-        this.refrefText.set('top', this.priceText.lineCoords.tl.y - this.refrefText.height - 25)
+
+    update(props){
+        //funcion para actualizar los texto de la imagen
+        const {productName, ref, price, whatsapp} = props
+        const {priceObject, productNameRefObject, whatsappObject} = this.objects
+        
+        priceObject && priceObject.set('text', price || this.price)
+        
+        productNameRefObject && productNameRefObject.set('text', `${productName || this.productName}\nRef. ${ref || this.ref}`)
+        productNameRefObject && productNameRefObject.set('top', priceObject.lineCoords.tl.y - productNameRefObject.height - 25)
+        
+        whatsappObject && whatsappObject.set('text', whatsapp || this.whatsapp)
+    
         this.canvas.renderAll()
-        console.log("se actualizo el texto")
-     
     }
 
+    addVarianHook(hooks){
+        const circle1 = new fabric.Circle({
+            radius: 40, 
+            fill: 'transparent', 
+            left: 400, 
+            top: 100,
+            stroke: 'red',
+            strokeWidth: 4,
+            originX: 'center'
+        })
+   
+        const circle2 = new fabric.Circle({
+            radius: 65, 
+            fill: 'transparent', 
+            left: 400, 
+            top: 300,
+            stroke: 'red',
+            strokeWidth: 4,
+            originX: 'center'
+        })
 
+        const circle1Coords = circle1._getCoords()
+        const circle1Center =  circle1.getCenterPoint()
+        
+        
+        const circle2Coords = circle2._getCoords()
+        const circle2Center =  circle2.getCenterPoint()
+        
+        const line1 = new fabric.Line([circle1Coords.br.x - circle1.strokeWidth, circle1Center.y , circle2Coords.br.x - circle2.strokeWidth, circle2Center.y],{
+            stroke: 'red',
+            strokeWidth: 4
+        })
+        const line2 = new fabric.Line([circle1Coords.bl.x, circle1Center.y , circle2Coords.bl.x, circle2Center.y],{
+            stroke: 'red',
+            strokeWidth: 4
+        })
+
+        const group = new fabric.Group([circle1, circle2, line1, line2],{
+            angle: -40
+        })
+        this.canvas.add(group)
+    }
 
 }
 
@@ -254,7 +343,7 @@ imaginator.init({
     productName: 'Faja Latex Clásica 3 Hileras',
     ref: '1934-3',
     price: '$80.000',
-    whatsapp: true,
+    whatsapp: '+57 318 2657709'
 })
 
 
@@ -265,5 +354,10 @@ fileInput.addEventListener('change', e => {
 
 btn.addEventListener('click', () =>{
     //imaginator.clear()
-    imaginator.toJSON()
+    const json = imaginator.toJSON()
+    imaginator.loadFromJSON(json).then(()=>{
+        imaginator.update({
+            price: '$105.000',
+        })
+    })
 })
