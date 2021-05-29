@@ -52,6 +52,7 @@ class Imaginator {
         this.price = ''
 
         this.objects = {}
+    
 
     }
 
@@ -163,8 +164,6 @@ class Imaginator {
             productNameRefObject: refrefText,
             whatsappObject: whatsappNumber
         }
-
-        this.addVarianHook()
 
         return
     }
@@ -300,10 +299,10 @@ class Imaginator {
         })
    
         const circle2 = new fabric.Circle({
-            radius: 65, 
+            radius: 70, 
             fill: 'transparent', 
             left: 400, 
-            top: 300,
+            top: 350,
             stroke: 'red',
             strokeWidth: 4,
             originX: 'center'
@@ -328,8 +327,13 @@ class Imaginator {
         const group = new fabric.Group([circle1, circle2, line1, line2],{
             angle: -40
         })
+
+        group.bringToFront()
+        this.canvas.setActiveObject(group)
         this.canvas.add(group)
     }
+
+    
 
 }
 
@@ -337,6 +341,7 @@ class Imaginator {
 
 const fileInput = document.getElementById('file')
 const btn = document.getElementById('btn')
+const btnJson = document.getElementById('btn-json')
 const imaginator = new Imaginator('b', 1140, 860)
 
 imaginator.init({
@@ -345,6 +350,8 @@ imaginator.init({
     price: '$80.000',
     whatsapp: '+57 318 2657709'
 })
+
+
 
 
 fileInput.addEventListener('change', e => {
@@ -360,4 +367,10 @@ btn.addEventListener('click', () =>{
             price: '$105.000',
         })
     })
+})
+
+
+btnJson.addEventListener('click', ()=>{
+    imaginator.addVarianHook()
+    console.log("se deshabilito la edicion")
 })
