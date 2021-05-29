@@ -1,0 +1,23 @@
+{
+  "name": "imaginator",
+  "version": "1.0.0",
+  "description": "easy way to create images for sells",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabian0896/imaginator.git"
+  },
+  "author": "Fabian David Duenas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fabian0896/imaginator/issues"
+  },
+  "homepage": "https://github.com/fabian0896/imaginator#readme",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5"
+  }
+}

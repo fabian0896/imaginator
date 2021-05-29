@@ -1,10 +1,8 @@
 
-
-
 class Imaginator {
     constructor(canvasId, width, height) {
         this.width = width,
-            this.height = height
+        this.height = height
 
         const canvasElem = document.getElementById(canvasId)
 
@@ -32,7 +30,7 @@ class Imaginator {
             width: 1140,
             height: 860
         });
-
+        canvas.selection = false
         canvas.setDimensions({
             width: '100%',
             height: '100%'
@@ -287,58 +285,126 @@ class Imaginator {
         this.canvas.renderAll()
     }
 
-    addVarianHook(hooks){
-        const circle1 = new fabric.Circle({
-            radius: 40, 
-            fill: 'transparent', 
-            left: 400, 
-            top: 100,
-            stroke: 'red',
-            strokeWidth: 4,
-            originX: 'center'
-        })
-   
-        const circle2 = new fabric.Circle({
-            radius: 70, 
-            fill: 'transparent', 
-            left: 400, 
-            top: 350,
-            stroke: 'red',
-            strokeWidth: 4,
-            originX: 'center'
+    addVarianHook(hooks=1){
+        if(hooks > 4 || hooks < 1){
+            throw new Error('El valor de hooks tiene que estar entre 1 y 4')
+        }
+
+        let oldPosition = this.objects.hooksObject ? this.objects.hooksObject.getPointByOrigin('center', 'center') : null
+        this.objects.hooksObject && this.canvas.remove(this.objects.hooksObject)
+
+        const hooksImages = [
+            'https://i.ibb.co/vJDQhpC/hooks-1.jpg',
+            'https://i.ibb.co/Q6D78sK/hooks-2.jpg',
+            'https://i.ibb.co/BjrKY6k/hooks-3.jpg',
+            'https://i.ibb.co/zVyNmB1/hooks-4.jpg'
+        ]
+  
+        const RADIUS = 70
+        
+        return new Promise(resolve => {
+
+            fabric.Image.fromURL(hooksImages[hooks - 1], img => {
+                const circle1 = new fabric.Circle({
+                    radius: 40, 
+                    fill: 'transparent', 
+                    left: 400, 
+                    top: 100,
+                    stroke: 'red',
+                    strokeWidth: 4,
+                    originX: 'center'
+                })
+           
+                const circle2 = new fabric.Circle({
+                    radius: RADIUS, 
+                    fill: 'transparent', 
+                    left: 400, 
+                    top: 350,
+                    stroke: 'red',
+                    strokeWidth: 4,
+                    originX: 'center'
+                })
+        
+                const circle1Coords = circle1._getCoords()
+                const circle1Center =  circle1.getCenterPoint()
+                
+                
+                const circle2Coords = circle2._getCoords()
+                const circle2Center =  circle2.getCenterPoint()
+                
+                const line1 = new fabric.Line([circle1Coords.br.x - circle1.strokeWidth, circle1Center.y , circle2Coords.br.x - circle2.strokeWidth, circle2Center.y],{
+                    stroke: 'red',
+                    strokeWidth: 4
+                })
+                const line2 = new fabric.Line([circle1Coords.bl.x, circle1Center.y , circle2Coords.bl.x, circle2Center.y],{
+                    stroke: 'red',
+                    strokeWidth: 4
+                })
+        
+                const scaleImageValue = fabric.util.findScaleToFit(img, circle2)
+                img.scale(scaleImageValue)
+                
+                
+    
+                img.set({
+                    left: circle2Center.x, 
+                    top: circle2Center.y,
+                    originX: 'center',
+                    originY: 'center',
+                    angle: 40,
+                    clipPath: new fabric.Circle({
+                        radius: img.width / 2,
+                        originX: 'center',
+                        originY: 'center',
+                      })
+                })
+    
+                circle2.bringToFront()
+    
+    
+                const group = new fabric.Group([img, circle1, circle2, line1, line2],{
+                    angle: -40,
+                    id: 'hooks'
+                })
+    
+                oldPosition && group.setPositionByOrigin(oldPosition, 'center', 'center')
+    
+        
+                group.bringToFront()
+                this.canvas.setActiveObject(group)
+                this.objects['hooksObject'] = group
+                this.canvas.add(group)
+                resolve()
+            })
+
         })
 
-        const circle1Coords = circle1._getCoords()
-        const circle1Center =  circle1.getCenterPoint()
-        
-        
-        const circle2Coords = circle2._getCoords()
-        const circle2Center =  circle2.getCenterPoint()
-        
-        const line1 = new fabric.Line([circle1Coords.br.x - circle1.strokeWidth, circle1Center.y , circle2Coords.br.x - circle2.strokeWidth, circle2Center.y],{
-            stroke: 'red',
-            strokeWidth: 4
-        })
-        const line2 = new fabric.Line([circle1Coords.bl.x, circle1Center.y , circle2Coords.bl.x, circle2Center.y],{
-            stroke: 'red',
-            strokeWidth: 4
-        })
-
-        const group = new fabric.Group([circle1, circle2, line1, line2],{
-            angle: -40
-        })
-
-        group.bringToFront()
-        this.canvas.setActiveObject(group)
-        this.canvas.add(group)
     }
 
-    
+    lockCanvas(option=true){
+        if(!option){
+            this.objects.lockRectObject && this.canvas.remove(this.objects.lockRectObject)
+            console.log("se quito el bloqueo")
+            return
+        }
+        const rect = new fabric.Rect({
+            left: 0,
+            top: 0,
+            fill: 'transparent',
+            width: this.width,
+            height: this.height,
+            selectable: false,
+            excludeFromExport: true,
+            hoverCursor: 'not-allowed'
+        });
+        this.objects.lockRectObject = rect
+        this.canvas.add(rect);
+    }
 
 }
 
 
-
+//----------------- CODIGO PARA TEST ----------------------
 const fileInput = document.getElementById('file')
 const btn = document.getElementById('btn')
 const btnJson = document.getElementById('btn-json')
@@ -360,7 +426,6 @@ fileInput.addEventListener('change', e => {
 })
 
 btn.addEventListener('click', () =>{
-    //imaginator.clear()
     const json = imaginator.toJSON()
     imaginator.loadFromJSON(json).then(()=>{
         imaginator.update({
@@ -369,8 +434,9 @@ btn.addEventListener('click', () =>{
     })
 })
 
-
+let counter = true;
 btnJson.addEventListener('click', ()=>{
-    imaginator.addVarianHook()
-    console.log("se deshabilito la edicion")
+    imaginator.lockCanvas(counter)
+    counter = !counter
 })
+
