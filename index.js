@@ -1,5 +1,7 @@
-require('./libs/fabric')
-require('./libs/marvin-1.0')
+//const {fabric} = require('fabric')
+//require('./lib/marvin')
+
+
 
 class Imaginator {
     constructor(canvasId, width, height) {
@@ -405,4 +407,6 @@ class Imaginator {
 
 }
 
-module.exports = {Imaginator};
+module.exports = {
+    Imaginator
+}

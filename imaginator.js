@@ -11,6 +11,7 @@ class Imaginator {
         mainContainerElement.style.width = '100%'
         mainContainerElement.style.paddingBottom = `${(this.height / this.width) * 100}%`
         mainContainerElement.style.background = 'grey'
+        mainContainerElement.style.border = '1px solid black'
 
         const secondContainerElement = document.createElement('div')
         secondContainerElement.style.position = 'absolute'
@@ -64,7 +65,7 @@ class Imaginator {
             productName,
             price,
             ref,
-            whatsapp
+            whatsapp,
         } = values
 
         this.productName = productName
@@ -168,6 +169,19 @@ class Imaginator {
 
 
     async addImage(file) {
+
+        const imageNoBg = await this.removeBgFabric(file)
+        imageNoBg.scale(1)
+        imageNoBg.set('left', this.INFO_WIDTH)
+        const height = imageNoBg.height
+        const canvasHeight = this.canvas.getHeight()
+        const scaleValue = canvasHeight / height
+        imageNoBg.scale(scaleValue)
+        imageNoBg.set('left', this.INFO_WIDTH)
+        this.canvas.setActiveObject(imageNoBg)
+        this.canvas.add(imageNoBg) 
+        return
+        /*
         const image = await this.removeBg(file)
         const url = URL.createObjectURL(image)
         fabric.Image.fromURL(url, oImg => {
@@ -180,6 +194,7 @@ class Imaginator {
             this.canvas.add(oImg)
             return
         })
+        */
     }
 
 
@@ -399,6 +414,27 @@ class Imaginator {
         });
         this.objects.lockRectObject = rect
         this.canvas.add(rect);
+    }
+
+    removeBgFabric(imageFile){
+        const filter = new fabric.Image.filters.RemoveColor({
+            threshold: 5,
+            distance: .055
+        })
+        const rezise = new fabric.Image.filters.Resize({
+            scaleY: 0.4,
+            scaleX: 0.4
+        })
+        const imageUrl = URL.createObjectURL(imageFile)
+        return new Promise(resolve => {
+            fabric.Image.fromURL(imageUrl, (image)=>{
+                image.scale(0.3)
+                image.filters.push(rezise)
+                image.filters.push(filter)
+                image.applyFilters()
+                resolve(image)
+            })
+        })
     }
 
 }
