@@ -1,6 +1,6 @@
 
 class Imaginator {
-    constructor(canvasId, width, height) {
+    constructor(canvasId, width=1140, height=860) {
         this.width = width,
         this.height = height
 
@@ -169,7 +169,6 @@ class Imaginator {
 
 
     async addImage(file) {
-
         const imageNoBg = await this.removeBgFabric(file)
         imageNoBg.scale(1)
         imageNoBg.set('left', this.INFO_WIDTH)
@@ -418,7 +417,6 @@ class Imaginator {
 
     removeBgFabric(imageFile){
         const filter = new fabric.Image.filters.RemoveColor({
-            threshold: 5,
             distance: .055
         })
         const rezise = new fabric.Image.filters.Resize({
@@ -444,7 +442,18 @@ class Imaginator {
 const fileInput = document.getElementById('file')
 const btn = document.getElementById('btn')
 const btnJson = document.getElementById('btn-json')
+const range = document.getElementById('range')
+const rangeValue = document.getElementById('rangeValue')
+
+
+
+
+
+
 const imaginator = new Imaginator('b', 1140, 860)
+
+
+
 
 imaginator.init({
     productName: 'Faja Latex Clásica 3 Hileras',
