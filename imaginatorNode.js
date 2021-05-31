@@ -1,14 +1,16 @@
-import fontColorContrast from 'font-color-contrast'
-import { fabric } from 'fabric'
+const fontColorContrast = require('font-color-contrast')
+const { fabric } = require('fabric')
 
-import logo_w_SVG from './SVG/logo-w.svg'
-import logo_b_SVG from './SVG/logo-b.svg'
-import dividerSVG from './SVG/divider.svg'
-import whatsappSVG from './SVG/whatsapp.svg'
+const logo_w_SVG = require('./StringSVG/logo-w')
+const logo_b_SVG = require('./StringSVG/logo-b')
+const dividerSVG = require('./StringSVG/divider')
+const whatsappSVG = require('./StringSVG/whatsapp')
+
 
 
 class Imaginator {
-    constructor(canvasId, width, height) {
+
+    constructor(canvasId, width, height,) {
         this.width = width,
             this.height = height
         this.logo = {
@@ -105,11 +107,6 @@ class Imaginator {
         })
 
 
-        /*  fabric.loadSVGFromString(dividerString, (objects, options) => {
-             const obj = fabric.util.groupSVGElements(objects, options);
-             this.canvas.add(obj)
-         }) */
-
         await this.loadSVG(this.logo[TEXT_COLOR], {
             lockMovementX: true,
             left: PADDING,
@@ -122,6 +119,8 @@ class Imaginator {
             obj.scale(scaleValue)
         })
 
+
+        // Si no se pasa el whatsApp como parametro no se tiene que renderizar
         if (this.whatsapp) {
             const whatsappLogoObject = await this.loadSVG(whatsappSVG, {
                 lockMovementX: true,
@@ -144,7 +143,6 @@ class Imaginator {
             whatsappNumber.set('id', 'whatsapp')
             whatsappNumber.setPositionByOrigin({ x: (PADDING * 2 + whatsappLogoObject.getScaledWidth()), y: whatsappLogoObject.getCenterPoint().y }, 'left', 'center')
             canvas.add(whatsappNumber)
-            this.objects.whatsappObject = whatsappNumber
         }
 
         // Textos para hacer referencias y poderlos editat mas adelante
@@ -181,6 +179,7 @@ class Imaginator {
         this.objects = {
             priceObject: priceText,
             productNameRefObject: refrefText,
+            whatsappObject: whatsappNumber
         }
 
         return
@@ -217,12 +216,11 @@ class Imaginator {
 
     loadSVG(url, props, callback) {
         return new Promise(resolve => {
-            fabric.loadSVGFromURL(url, (objects, options) => {
+            fabric.loadSVGFromString(url, (objects, options) => {
                 const obj = fabric.util.groupSVGElements(objects, options);
                 Object.keys(props).forEach(prop => {
                     obj.set(prop, props[prop])
                 })
-                console.log(url, obj.toObject())
                 callback && callback(obj)
                 this.canvas.add(obj)
                 resolve(obj)
@@ -455,4 +453,6 @@ class Imaginator {
     }
 }
 
-export default Imaginator
+module.exports = {
+    Imaginator
+}

@@ -4,8 +4,10 @@
   "description": "easy way to create images for sells",
   "main": "build/index_bundle.js",
   "scripts": {
+    "start": "parcel index.html",
     "build": "webpack",
-    "build:parcel": "parcel build index.js"
+    "build:parcel": "parcel build index.js",
+    "build:lib": "browserify imaginatorNode.js --standalone imaginator  -o ./lib/imaginanor.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,10 @@
     "webpack-cli": "^4.7.0"
   },
   "dependencies": {
-    "fabric": "^4.5.0"
-  }
+    "fabric": "^4.5.0",
+    "font-color-contrast": "^1.0.3"
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ]
 }
