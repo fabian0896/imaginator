@@ -72,6 +72,7 @@ class Imaginator {
         const BACKGROUND = values.background || this.BACKGROUND
         const PADDING = values.padding || this.PADDING
         const TEXT_COLOR = fontColorContrast(BACKGROUND)
+        this.TEXT_COLOR = TEXT_COLOR
 
         const {
             productName,
@@ -93,8 +94,9 @@ class Imaginator {
             height: canvas.getHeight() + 1,
             selectable: false
         });
+        infoBackground.set('id', 'infoBg')
         canvas.add(infoBackground);
-
+        this.objects.infoBgObject = infoBackground
 
         await this.loadSVG(dividerSVG, {
             top: -20,
@@ -110,7 +112,7 @@ class Imaginator {
              this.canvas.add(obj)
          }) */
 
-        await this.loadSVG(this.logo[TEXT_COLOR], {
+        const companyLogoObject = await this.loadSVG(this.logo[TEXT_COLOR], {
             lockMovementX: true,
             left: PADDING,
             top: PADDING * 2,
@@ -121,31 +123,10 @@ class Imaginator {
             const scaleValue = (containerWidth - (PADDING * 2)) / logoWidth
             obj.scale(scaleValue)
         })
+        this.objects.companyLogoObject = companyLogoObject
+        companyLogoObject.set('id', 'companyLogo')
 
-        if (this.whatsapp) {
-            const whatsappLogoObject = await this.loadSVG(whatsappSVG, {
-                lockMovementX: true,
-                left: PADDING,
-                selectable: false
-            }, obj => {
-                obj.scale(0.06)
-                obj.set('top', canvas.getHeight() - obj.getScaledHeight() - (PADDING * 2))
-            })
-            const whatsappNumber = new fabric.Textbox(whatsapp, {
-                left: PADDING,
-                width: infoBackground.width - (PADDING * 3 + whatsappLogoObject.getScaledWidth()),
-                fontSize: 25,
-                fontFamily: 'Roboto',
-                fill: TEXT_COLOR,
-                fontWeight: 200,
-                lockMovementX: false,
-                selectable: false
-            });
-            whatsappNumber.set('id', 'whatsapp')
-            whatsappNumber.setPositionByOrigin({ x: (PADDING * 2 + whatsappLogoObject.getScaledWidth()), y: whatsappLogoObject.getCenterPoint().y }, 'left', 'center')
-            canvas.add(whatsappNumber)
-            this.objects.whatsappObject = whatsappNumber
-        }
+        await this.renderSocials(whatsapp)
 
         // Textos para hacer referencias y poderlos editat mas adelante
         const priceText = new fabric.Textbox(price, {
@@ -222,7 +203,6 @@ class Imaginator {
                 Object.keys(props).forEach(prop => {
                     obj.set(prop, props[prop])
                 })
-                console.log(url, obj.toObject())
                 callback && callback(obj)
                 this.canvas.add(obj)
                 resolve(obj)
@@ -230,37 +210,39 @@ class Imaginator {
         })
     }
 
-    /*
-    removeBg(fileImage) {
-        return new Promise((resolve, reject) => {
-            const image = new MarvinImage()
-            const imageUrl = URL.createObjectURL(fileImage)
-            image.load(imageUrl, () => {
-                this.whiteToAlpha(image);
-                Marvin.alphaBoundary(image.clone(), image, 8);
-                //Marvin.scale(image.clone(), image , 1000);
-                console.log("background removed!")
-                resolve(image.toBlob())
+
+    async renderSocials(whatsapp){
+        this.objects.whatsappObject && this.canvas.remove(this.objects.whatsappObject)
+        this.objects.whatsappLogoObject && this.canvas.remove(this.objects.whatsappLogoObject)
+        this.whatsapp = whatsapp
+        if (this.whatsapp) {
+            const whatsappLogoObject = await this.loadSVG(whatsappSVG, {
+                lockMovementX: true,
+                left: this.PADDING,
+                selectable: false
+            }, obj => {
+                obj.scale(0.06)
+                obj.set('top', this.canvas.getHeight() - obj.getScaledHeight() - (this.PADDING * 1))
             })
-        })
-    }
-  
-
-    whiteToAlpha(image) {
-        for (var y = 0; y < image.getHeight(); y++) {
-
-            for (var x = 0; x < image.getWidth(); x++) {
-                var r = image.getIntComponent0(x, y);
-                var g = image.getIntComponent1(x, y);
-                var b = image.getIntComponent2(x, y);
-
-                if (r >= 242 && g >= 242 && b >= 242) {
-                    image.setIntColor(x, y, 0);
-                }
-            }
+            whatsappLogoObject.set('id', 'whatsappLogo')
+            const whatsappNumber = new fabric.Textbox(whatsapp, {
+                left: this.PADDING,
+                width: this.INFO_WIDTH - (this.PADDING * 3 + whatsappLogoObject.getScaledWidth()),
+                fontSize: 24,
+                fontFamily: 'Roboto',
+                fill: this.TEXT_COLOR,
+                fontWeight: 200,
+                lockMovementX: false,
+                selectable: false
+            });
+            whatsappNumber.set('id', 'whatsapp')
+            whatsappNumber.setPositionByOrigin({ x: (this.PADDING * 1.5 + whatsappLogoObject.getScaledWidth()), y: whatsappLogoObject.getCenterPoint().y }, 'left', 'center')
+            this.canvas.add(whatsappNumber)
+            this.objects.whatsappObject = whatsappNumber
+            this.objects.whatsappLogoObject = whatsappLogoObject
         }
+        return
     }
-    */
 
     toJSON() {
         const canvas = this.canvas
@@ -300,17 +282,36 @@ class Imaginator {
         return result
     }
 
-    update(props) {
+    async update(props) {
         //funcion para actualizar los texto de la imagen
-        const { productName, ref, price, whatsapp } = props
-        const { priceObject, productNameRefObject, whatsappObject } = this.objects
+        const { productName, ref, price, whatsapp, background } = props
+        const { priceObject, productNameRefObject } = this.objects
+
+        this.objects.infoBgObject && this.objects.infoBgObject.set('fill', background || this.BACKGROUND)
+        const TEXT_COLOR = fontColorContrast(background || this.BACKGROUND)
+        this.TEXT_COLOR = TEXT_COLOR
+
+        if(this.objects.companyLogoObject){
+            const oldScaleX = this.objects.companyLogoObject.scaleX
+            const oldPos = this.objects.companyLogoObject.getPointByOrigin('center', 'center')
+            this.canvas.remove(this.objects.companyLogoObject)
+            const companyLogoObject = await this.loadSVG(this.logo[TEXT_COLOR], {})
+            companyLogoObject.scale(oldScaleX)
+            companyLogoObject.set('lockMovementX', true)
+            companyLogoObject.setPositionByOrigin(oldPos, 'center', 'center')
+            companyLogoObject.set('id', 'companyLogo')
+            this.objects.companyLogoObject = companyLogoObject
+        }
 
         priceObject && priceObject.set('text', price || this.price)
+        priceObject && priceObject.set('fill', TEXT_COLOR)
+
 
         productNameRefObject && productNameRefObject.set('text', `${productName || this.productName}\nRef. ${ref || this.ref}`)
         productNameRefObject && productNameRefObject.set('top', priceObject.lineCoords.tl.y - productNameRefObject.height - 25)
+        productNameRefObject && productNameRefObject.set('fill', TEXT_COLOR)
 
-        whatsappObject && whatsappObject.set('text', whatsapp || this.whatsapp)
+        await this.renderSocials(whatsapp)
 
         this.canvas.renderAll()
     }
@@ -330,7 +331,7 @@ class Imaginator {
             'https://i.ibb.co/zVyNmB1/hooks-4.jpg'
         ]
 
-        const RADIUS = 70
+        const RADIUS = 80
 
         return new Promise(resolve => {
 

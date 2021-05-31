@@ -29,12 +29,21 @@ btn.addEventListener('click', () =>{
     imaginator.loadFromJSON(json).then(()=>{
         imaginator.update({
             price: '$105.000',
+            productName: 'Chaleco Latex Clasico Tira Ancha 3 Hileras',
+            ref: '1935-3',
+            whatsapp: '+57 321 7378301',
+            background: '#b8c5d4'
         })
     })
 })
 
+//#127dff
+//#E0CAB3
+//#b8c5d4
+
 let counter = true;
 btnJson.addEventListener('click', ()=>{
-    imaginator.lockCanvas(counter)
-    counter = !counter
+    imaginator.addVarianHook(2)
+    //imaginator.lockCanvas(counter)
+    //ounter = !counter
 })
