@@ -1,5 +1,5 @@
 //import {Imaginator} from './lib/imaginanor'
-import Imaginator from './imaginator'
+import {Imaginator, BackgoundRemover} from './imaginator'
 
 const fileInput = document.getElementById('file')
 const btn = document.getElementById('btn')
@@ -7,6 +7,7 @@ const btnJson = document.getElementById('btn-json')
 
 
 const imaginator = new Imaginator('b', 1140, 860)
+const bgRemover = new BackgoundRemover('c', 'customRange1')
 
 imaginator.init({
     productName: 'Faja Latex Clásica 3 Hileras',
@@ -19,9 +20,9 @@ imaginator.init({
 
 
 
-fileInput.addEventListener('change', e => {
+fileInput.addEventListener('change',async  e => {
     const file = e.target.files[0]
-    imaginator.addImage(file)
+    await bgRemover.uploadImage(file)
 })
 
 btn.addEventListener('click', () =>{

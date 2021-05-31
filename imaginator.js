@@ -7,8 +7,8 @@ import dividerSVG from './SVG/divider.svg'
 import whatsappSVG from './SVG/whatsapp.svg'
 
 
-class Imaginator {
-    constructor(canvasId, width, height) {
+export class Imaginator {
+    constructor(canvasId, width = 1140, height = 860) {
         this.width = width,
             this.height = height
         this.logo = {
@@ -23,8 +23,8 @@ class Imaginator {
         mainContainerElement.style.width = '100%'
         mainContainerElement.style.paddingBottom = `${(this.height / this.width) * 100}%`
         mainContainerElement.style.background = 'grey'
-        mainContainerElement.style.boxShadow = '3px 3px 20px rgba(0,0,0,.4)'
-        mainContainerElement.style.borderRadius = '4px'
+        mainContainerElement.style.boxShadow = '3px 3px 30px rgba(0,0,0,.3)'
+        mainContainerElement.style.borderRadius = '5px'
         mainContainerElement.style.overflow = 'hidden'
 
         const secondContainerElement = document.createElement('div')
@@ -41,8 +41,8 @@ class Imaginator {
 
         const canvas = new fabric.Canvas(canvasId, {
             backgroundColor: '#fff',
-            width: 1140,
-            height: 860
+            width,
+            height
         });
         canvas.selection = false
         canvas.setDimensions({
@@ -211,7 +211,7 @@ class Imaginator {
     }
 
 
-    async renderSocials(whatsapp){
+    async renderSocials(whatsapp) {
         this.objects.whatsappObject && this.canvas.remove(this.objects.whatsappObject)
         this.objects.whatsappLogoObject && this.canvas.remove(this.objects.whatsappLogoObject)
         this.whatsapp = whatsapp
@@ -291,7 +291,7 @@ class Imaginator {
         const TEXT_COLOR = fontColorContrast(background || this.BACKGROUND)
         this.TEXT_COLOR = TEXT_COLOR
 
-        if(this.objects.companyLogoObject){
+        if (this.objects.companyLogoObject) {
             const oldScaleX = this.objects.companyLogoObject.scaleX
             const oldPos = this.objects.companyLogoObject.getPointByOrigin('center', 'center')
             this.canvas.remove(this.objects.companyLogoObject)
@@ -456,4 +456,113 @@ class Imaginator {
     }
 }
 
-export default Imaginator
+
+
+export class BackgoundRemover {
+    constructor(canvasId, rangeId, width = 896, height = 1280) {
+        this.width = width,
+            this.height = height
+
+
+        const range = document.getElementById(rangeId)
+        range.setAttribute('min', '0')
+        range.setAttribute('max', '0.2')
+        range.setAttribute('step', '0.001')
+
+        this.range = range
+
+        const canvasElem = document.getElementById(canvasId)
+
+        const mainContainerElement = document.createElement('div')
+        mainContainerElement.style.position = 'relative'
+        mainContainerElement.style.width = '100%'
+        mainContainerElement.style.paddingBottom = `${(this.height / this.width) * 100}%`
+        mainContainerElement.style.background = 'grey'
+        mainContainerElement.style.boxShadow = '3px 3px 30px rgba(0,0,0,.3)'
+        mainContainerElement.style.borderRadius = '5px'
+        mainContainerElement.style.overflow = 'hidden'
+
+        const secondContainerElement = document.createElement('div')
+        secondContainerElement.style.position = 'absolute'
+        secondContainerElement.style.top = 0
+        secondContainerElement.style.bottom = 0
+        secondContainerElement.style.left = 0
+        secondContainerElement.style.right = 0
+
+
+        mainContainerElement.appendChild(secondContainerElement)
+        canvasElem.replaceWith(mainContainerElement)
+        secondContainerElement.appendChild(canvasElem)
+
+
+        const canvas = new fabric.Canvas(canvasId, {
+            backgroundColor: '#222',
+            width,
+            height,
+        });
+        canvas.selection = false
+        canvas.setDimensions({
+            width: '100%',
+            height: '100%'
+        }, {
+            cssOnly: true
+        })
+        this.canvas = canvas
+    }
+
+    async uploadImage(file) {
+        this.range.removeEventListener('change', this.chanegeValue)
+        this.canvas.forEachObject(obj => {
+            this.canvas.remove(obj)
+        })
+        const imageNoBg = await this.removeBgFabric(file)
+        imageNoBg.set('left', 0)
+        imageNoBg.set('top', 0)
+        imageNoBg.set('selectable', false)
+        this.canvas.centerObjectH(imageNoBg)
+        this.canvas.add(imageNoBg)
+        this.currentImage = imageNoBg
+        this.range.value = imageNoBg.filters[1].distance
+        this.range.addEventListener('change', this.chanegeValue)
+    }
+
+    chanegeValue = e => {
+        const value = e.target.value
+        console.log(value)
+        this.currentImage.filters[1].distance = value
+        this.currentImage.applyFilters()
+        this.canvas.renderAll()
+    }
+
+    modifyDistance(value) {
+        console.log(this)
+        this.currentImage.filters[1].distance = value
+        this.currentImage.applyFilters()
+        this.canvas.renderAll()
+    }
+
+    removeBgFabric(imageFile) {
+        const filter = new fabric.Image.filters.RemoveColor({
+            distance: .055
+        })
+
+        const imageUrl = URL.createObjectURL(imageFile)
+        return new Promise(resolve => {
+            fabric.Image.fromURL(imageUrl, (image) => {
+                const scaleValue = fabric.util.findScaleToFit(image, this.canvas)
+                const rezise = new fabric.Image.filters.Resize({
+                    scaleY: scaleValue,
+                    scaleX: scaleValue
+                })
+                image.scale(scaleValue)
+                image.filters.push(rezise)
+                image.filters.push(filter)
+                image.applyFilters()
+                resolve(image)
+            })
+        })
+    }
+}
+
+
+
