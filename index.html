@@ -28,12 +28,19 @@
 
     <div class="row">
       <div class="col-4">
+        <div class="d-grid gap-2 mb-2">
+          <input class="form-control" type="file" name="file" id="file">
+        </div>
+        
         <canvas id="c"></canvas>
         
         <input type="range" class="form-range mt-3" id="customRange1">
         <div class="d-grid gap-2">
           <button id="btn-save" class="btn btn-primary mt-3">Añadir</button>
         </div>
+
+        <input type="color" name="color" id="color">
+
         <!-- <form>
           <div class="mb-3">
             <label for="name" class="form-label">Nombre</label>
@@ -56,13 +63,13 @@
       </div>
 
       <div class="col-8">
-        <input type="file" name="file" id="file">
-        <button id="btn">Guradar Imagen</button>
-      
+        
+        
+        <button class="btn btn-primary" id="btn">Cargar Imagen</button>
         <button id="btn-json">Convert To JSOM</button>
       
         <canvas id="b"></canvas>
-        <label id="rangeValue" for="customRange1" class="form-label">Example range</label>
+  
       </div>
 
    

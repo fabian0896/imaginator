@@ -1,9 +1,9 @@
 import fontColorContrast from 'font-color-contrast'
 import { fabric } from 'fabric'
+import Color from 'color'
 
 import logo_w_SVG from './SVG/logo-w.svg'
 import logo_b_SVG from './SVG/logo-b.svg'
-import dividerSVG from './SVG/divider.svg'
 import whatsappSVG from './SVG/whatsapp.svg'
 
 
@@ -98,19 +98,9 @@ export class Imaginator {
         canvas.add(infoBackground);
         this.objects.infoBgObject = infoBackground
 
-        await this.loadSVG(dividerSVG, {
-            top: -20,
-            scaleY: 2.5,
-            scaleX: 1,
-            left: INFO_WIDTH,
-            selectable: false
-        })
 
+        this.renderDivider()
 
-        /*  fabric.loadSVGFromString(dividerString, (objects, options) => {
-             const obj = fabric.util.groupSVGElements(objects, options);
-             this.canvas.add(obj)
-         }) */
 
         const companyLogoObject = await this.loadSVG(this.logo[TEXT_COLOR], {
             lockMovementX: true,
@@ -149,7 +139,7 @@ export class Imaginator {
             fontSize: 30,
             fontFamily: 'Roboto',
             fill: TEXT_COLOR,
-            fontWeight: 200,
+            fontWeight: 100,
             lockMovementX: true
         });
         refrefText.set('top', priceText.lineCoords.tl.y - refrefText.height - 25)
@@ -160,6 +150,7 @@ export class Imaginator {
 
 
         this.objects = {
+            ...this.objects,
             priceObject: priceText,
             productNameRefObject: refrefText,
         }
@@ -232,7 +223,7 @@ export class Imaginator {
                 fontSize: 24,
                 fontFamily: 'Roboto',
                 fill: this.TEXT_COLOR,
-                fontWeight: 200,
+                fontWeight: 400,
                 lockMovementX: false,
                 selectable: false
             });
@@ -291,6 +282,7 @@ export class Imaginator {
         this.objects.infoBgObject && this.objects.infoBgObject.set('fill', background || this.BACKGROUND)
         const TEXT_COLOR = fontColorContrast(background || this.BACKGROUND)
         this.TEXT_COLOR = TEXT_COLOR
+        console.log(TEXT_COLOR)
 
         if (this.objects.companyLogoObject) {
             const oldScaleX = this.objects.companyLogoObject.scaleX
@@ -454,6 +446,78 @@ export class Imaginator {
             })
         })
     }
+
+    metalicColor(inputColor){
+        const color = Color(inputColor)
+        
+        const darkColor = color.isDark() ? color.hsl().toString() : color.darken(0.32).toString()
+        const darkColorObj = color.isDark() ? color : color.darken(0.32)
+        const lightColor = color.isDark()? color.lighten(0.5).hsl().toString() : color.hsl().toString()
+        const lightColorObj = color.isDark()? color.lighten(0.5) : color
+        this.BACKGROUND = darkColorObj.mix(lightColorObj, 0.5).hex().toString()
+        
+    
+
+        const info = this.objects.infoBgObject
+        const gradient = new fabric.Gradient({
+            type: 'linear',
+            gradientUnits: 'pixels',
+            coords: {x1: 0 - 100, y1: info.height , x2: info.width + 100, y2: 0},
+            colorStops:[
+                {offset: 0, color: darkColor},
+                {offset: .15, color: lightColor},
+                {offset: .30, color: darkColor},
+                {offset: .41, color: lightColor},
+                {offset: .606, color: darkColor},
+                {offset: .718, color: lightColor},
+                {offset: .86, color: lightColor},
+                {offset: 1, color: darkColor}
+            ]
+        })
+        this.update({whatsapp: this.whatsapp})
+        this.objects.infoBgObject.set('fill', gradient)
+        this.canvas.renderAll()
+    }
+
+    renderDivider(pos=320){
+        const rect = new fabric.Rect({
+            top: 0,
+            height: this.canvas.height,
+            width: 15,
+            left: pos,
+            fill: '#333',
+            selectable: false
+        })
+
+        const tan60 = Math.tan(1.0472) //tanjente de 60 grados
+        const angleDistance = ((rect.height/tan60) - rect.width) / 2
+
+        const gradient = new fabric.Gradient({
+            type: 'linear',
+            gradientUnits: 'pixels',
+            coords: {x1: 0 - angleDistance, y1: rect.height - 100 , x2: rect.width + angleDistance, y2: 100},
+            colorStops:[
+                {offset: 0, color: '#BA8B01'},
+                {offset: .184, color: '#FFFFCB'},
+                {offset: .298, color: '#FFFFCB'},
+                {offset: .43, color: '#ECCE76'},
+                {offset: .489, color: '#A26F14'},
+                {offset: .605, color: '#A26F14'},
+                {offset: .67, color: '#E4BA58'},
+                {offset: .685, color: '#A65B1A'},
+                {offset: .774, color: '#FFFFCD'},
+                {offset: .795, color: '#FFFFCD'},
+                {offset: .846, color: '#E5BD5D'},
+                {offset: .886, color: '#BB913B'},
+                {offset: .911, color: '#BB913B'},
+                {offset: .95, color: '#C5992E'},
+                {offset: 1, color: '#7F470A'},
+            ]
+        })
+        rect.set('fill', gradient)
+        this.canvas.add(rect)
+    }
+
 }
 
 
@@ -466,7 +530,7 @@ export class BackgoundRemover {
 
         const range = document.getElementById(rangeId)
         range.setAttribute('min', '0')
-        range.setAttribute('max', '0.2')
+        range.setAttribute('max', '0.3')
         range.setAttribute('step', '0.001')
 
         this.range = range
@@ -528,7 +592,7 @@ export class BackgoundRemover {
 
     chanegeValue = e => {
         const value = e.target.value
-        console.log(value)
+        //console.log(value)
         this.currentImage.filters[1].distance = value
         this.currentImage.applyFilters()
         this.canvas.renderAll()
@@ -568,7 +632,13 @@ export class BackgoundRemover {
         this.canvas.forEachObject(obj => this.canvas.remove(obj))
         const url = this.currentImage.toDataURL()
         const blob = await fetch(url).then(res => res.blob())
+        this.currentImage = null
         return blob
+    }
+
+    cancel(){
+        this.currentImage = null
+        this.canvas.forEachObject(obj => this.canvas.remove(obj))
     }
 }
 
