@@ -522,8 +522,6 @@ export class Imaginator {
 
 }
 
-
-
 export class BackgoundRemover {
     constructor(canvasId, rangeId, width = 896, height = 1280) {
         this.width = width,
