@@ -282,7 +282,6 @@ export class Imaginator {
         this.objects.infoBgObject && this.objects.infoBgObject.set('fill', background || this.BACKGROUND)
         const TEXT_COLOR = fontColorContrast(background || this.BACKGROUND)
         this.TEXT_COLOR = TEXT_COLOR
-        console.log(TEXT_COLOR)
 
         if (this.objects.companyLogoObject) {
             const oldScaleX = this.objects.companyLogoObject.scaleX
@@ -304,7 +303,9 @@ export class Imaginator {
         productNameRefObject && productNameRefObject.set('top', priceObject.lineCoords.tl.y - productNameRefObject.height - 25)
         productNameRefObject && productNameRefObject.set('fill', TEXT_COLOR)
 
-        await this.renderSocials(whatsapp)
+        const wpValue = props.hasOwnProperty('whatsapp') ? whatsapp : this.whatsapp
+        await this.renderSocials(wpValue)
+        
 
         this.canvas.renderAll()
     }
@@ -447,7 +448,7 @@ export class Imaginator {
         })
     }
 
-    metalicColor(inputColor){
+    async metalicColor(inputColor){
         const color = Color(inputColor)
         
         const darkColor = color.isDark() ? color.hsl().toString() : color.darken(0.32).toString()
@@ -474,9 +475,10 @@ export class Imaginator {
                 {offset: 1, color: darkColor}
             ]
         })
-        this.update({whatsapp: this.whatsapp})
+        await this.update({whatsapp: this.whatsapp})
         this.objects.infoBgObject.set('fill', gradient)
         this.canvas.renderAll()
+        return
     }
 
     renderDivider(pos=320){
